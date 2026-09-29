@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ action_title }} — JobConnect{% endblock %}
+
+{% block content %}
+<div class="container container-narrow" style="padding-top: 3rem; padding-bottom: 5rem;">
+
+  <div style="margin-bottom: 2rem;">
+    <a href="{{ url_for('employer_dashboard') }}" style="display: inline-flex; align-items: center; gap: 0.35rem; color: var(--text-muted); font-size: 0.88rem; margin-bottom: 0.75rem;">
+      <i data-lucide="arrow-left" style="width: 15px; height: 15px;"></i>
+      <span>Back to Employer Hub</span>
+    </a>
+    <h1 style="font-family: var(--font-display); font-size: 2.2rem; font-weight: 800;">
+      {{ action_title }}
+    </h1>
+    <p style="color: var(--text-muted); font-size: 1rem;">
+      Reach qualified engineers, designers, and managers with detailed specifications.
+    </p>
+  </div>
+
+  <form method="POST">
+    <!-- Basic Job Info Card -->
+    <div class="card" style="margin-bottom: 2rem; padding: 2rem;">
+      <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+        <i data-lucide="briefcase" style="width: 20px; height: 20px; color: var(--primary);"></i>
+        <span>Position Overview</span>
+      </h3>
+
+      <div class="form-group">
+        <label class="form-label" for="jobTitle">Job Title *</label>
+        <input type="text" id="jobTitle" name="title" class="form-control" value="{{ job.title if job else '' }}" placeholder="e.g. Senior Frontend Engineer" required>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="categorySelect">Category / Domain *</label>
+          <select id="categorySelect" name="category_id" class="form-control" required>
+            <option value="">Select Category</option>
+            {% for cat in categories %}
+              <option value="{{ cat.id }}" {% if job and job.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="jobTypeSelect">Job Type *</label>
+          <select id="jobTypeSelect" name="job_type" class="form-control" required>
+            {% for jt in ['Full-time', 'Part-time', 'Remote', 'Contract', 'Internship'] %}
+              <option value="{{ jt }}" {% if job and job.job_type == jt %}selected{% endif %}>{{ jt }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="experienceSelect">Experience Level *</label>
+          <select id="experienceSelect" name="experience_level" class="form-control" required>
+            {% for exp in ['Entry Level', 'Mid Level', 'Senior Level', 'Lead / Staff'] %}
+              <option value="{{ exp }}" {% if job and job.experience_level == exp %}selected{% endif %}>{{ exp }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group" style="flex: 2;">
+          <label class="form-label" for="jobLocation">Location *</label>
+          <input type="text" id="jobLocation" name="location" class="form-control" value="{{ job.location if job else '' }}" placeholder="e.g. San Francisco, CA or Remote, US" required>
+        </div>
+
+        <div class="form-group" style="display: flex; align-items: flex-end; padding-bottom: 0.75rem;">
+          <label class="filter-checkbox-label" style="font-weight: 600;">
+            <input type="checkbox" name="is_remote" {% if job and job.is_remote %}checked{% endif %}>
+            <span>Remote-Eligible Role</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="salaryMin">Minimum Annual Salary</label>
+          <input type="number" id="salaryMin" name="salary_min" class="form-control" value="{{ job.salary_min if job and job.salary_min else '' }}" placeholder="120000">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="salaryMax">Maximum Annual Salary</label>
+          <input type="number" id="salaryMax" name="salary_max" class="form-control" value="{{ job.salary_max if job and job.salary_max else '' }}" placeholder="160000">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="salaryCurrency">Currency</label>
+          <select id="salaryCurrency" name="salary_currency" class="form-control">
+            <option value="USD" {% if job and job.salary_currency == 'USD' %}selected{% endif %}>USD ($)</option>
+            <option value="EUR" {% if job and job.salary_currency == 'EUR' %}selected{% endif %}>EUR (€)</option>
+            <option value="GBP" {% if job and job.salary_currency == 'GBP' %}selected{% endif %}>GBP (£)</option>
+            <option value="CAD" {% if job and job.salary_currency == 'CAD' %}selected{% endif %}>CAD ($)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="jobDeadline">Application Deadline</label>
+          <input type="date" id="jobDeadline" name="deadline" class="form-control" value="{{ job.deadline if job and job.deadline else '' }}">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="jobStatus">Posting Status</label>
+          <select id="jobStatus" name="status" class="form-control">
+            <option value="active" {% if not job or job.status == 'active' %}selected{% endif %}>Active (Publicly Listed)</option>
+            <option value="draft" {% if job and job.status == 'draft' %}selected{% endif %}>Draft (Unpublished)</option>
+            <option value="closed" {% if job and job.status == 'closed' %}selected{% endif %}>Closed</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="filter-checkbox-label" style="font-weight: 600;">
+          <input type="checkbox" name="is_featured" {% if job and job.is_featured %}checked{% endif %}>
+          <span>Feature this role on Home Page & Category Tops</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Description & Detailed Specs Card -->
+    <div class="card" style="margin-bottom: 2.5rem; padding: 2rem;">
+      <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+        <i data-lucide="file-text" style="width: 20px; height: 20px; color: var(--primary);"></i>
+        <span>Job Description & Requirements</span>
+      </h3>
+
+      <div class="form-group">
+        <label class="form-label" for="jobDescription">Role Overview & Mission *</label>
+        <textarea id="jobDescription" name="description" class="form-control" rows="5" placeholder="Describe the role, the team, and what this person will accomplish..." required>{{ job.description if job else '' }}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="jobRequirements">Requirements & Qualifications *</label>
+        <textarea id="jobRequirements" name="requirements" class="form-control" rows="6" placeholder="• 4+ years experience with...&#10;• Strong communication skills..." required>{{ job.requirements if job else '' }}</textarea>
+        <div class="form-hint">Tip: Use bullet points (•) for cleaner readability.</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="jobResponsibilities">Key Responsibilities</label>
+        <textarea id="jobResponsibilities" name="responsibilities" class="form-control" rows="5" placeholder="• Architect core services...&#10;• Collaborate with cross-functional leads...">{{ job.responsibilities if job else '' }}</textarea>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label" for="jobBenefits">Perks & Benefits</label>
+        <textarea id="jobBenefits" name="benefits" class="form-control" rows="4" placeholder="• Comprehensive healthcare&#10;• 401(k) matching&#10;• Unlimited PTO...">{{ job.benefits if job else '' }}</textarea>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+      <a href="{{ url_for('employer_dashboard') }}" class="btn btn-secondary">Cancel</a>
+      <button type="submit" class="btn btn-primary btn-lg">
+        <i data-lucide="check" style="width: 18px; height: 18px;"></i>
+        <span>Publish Position</span>
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

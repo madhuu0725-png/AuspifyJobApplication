@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+
+{% block title %}JobConnect — Discover Your Next Career Move{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+  <div class="container hero-content">
+    <div class="hero-tag">
+      <i data-lucide="sparkles" style="width: 15px; height: 15px;"></i>
+      <span>Over {{ total_jobs }}+ Curated Openings Live Today</span>
+    </div>
+
+    <h1 class="hero-title">
+      Where Extraordinary Talent Meets <span class="brand-accent">High-Growth Teams</span>
+    </h1>
+
+    <p class="hero-subtitle">
+      Discover high-impact roles in engineering, product, and design. Apply seamlessly, track your hiring milestones in real-time, and get noticed.
+    </p>
+
+    <!-- Search Form -->
+    <form action="{{ url_for('job_listings') }}" method="GET" class="hero-search-box">
+      <div class="search-field">
+        <i data-lucide="search" style="width: 20px; height: 20px;"></i>
+        <input type="text" name="q" placeholder="Job title, keywords, or company...">
+      </div>
+
+      <div class="search-field-divider"></div>
+
+      <div class="search-field">
+        <i data-lucide="map-pin" style="width: 20px; height: 20px;"></i>
+        <input type="text" name="location" placeholder="City or 'Remote'...">
+      </div>
+
+      <div class="search-field-divider"></div>
+
+      <div class="search-field">
+        <i data-lucide="briefcase" style="width: 20px; height: 20px;"></i>
+        <select name="category">
+          <option value="">All Categories</option>
+          {% for cat in categories_global %}
+            <option value="{{ cat.id }}">{{ cat.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg">
+        <i data-lucide="search" style="width: 18px; height: 18px;"></i>
+        <span>Search Jobs</span>
+      </button>
+    </form>
+
+    <!-- Quick Filter Pills -->
+    <div class="hero-pills">
+      <span>Popular Searches:</span>
+      <a href="{{ url_for('job_listings', q='Python') }}" class="hero-pill-link">Python</a>
+      <a href="{{ url_for('job_listings', q='React') }}" class="hero-pill-link">React</a>
+      <a href="{{ url_for('job_listings', remote='1') }}" class="hero-pill-link">Remote Only</a>
+      <a href="{{ url_for('job_listings', q='Design') }}" class="hero-pill-link">UI/UX Design</a>
+      <a href="{{ url_for('job_listings', q='DevOps') }}" class="hero-pill-link">DevOps</a>
+    </div>
+  </div>
+</section>
+
+<!-- Stats Strip -->
+<div class="stats-strip">
+  <div class="container stats-grid">
+    <div class="stat-item">
+      <div class="stat-icon">
+        <i data-lucide="briefcase" style="width: 26px; height: 26px;"></i>
+      </div>
+      <div>
+        <div class="stat-number">{{ total_jobs }}</div>
+        <div class="stat-label">Active Job Openings</div>
+      </div>
+    </div>
+
+    <div class="stat-item">
+      <div class="stat-icon" style="background: #f0fdf4; color: #16a34a;">
+        <i data-lucide="building-2" style="width: 26px; height: 26px;"></i>
+      </div>
+      <div>
+        <div class="stat-number">{{ total_companies }}</div>
+        <div class="stat-label">Partner Companies</div>
+      </div>
+    </div>
+
+    <div class="stat-item">
+      <div class="stat-icon" style="background: #f5f3ff; color: #7c3aed;">
+        <i data-lucide="users" style="width: 26px; height: 26px;"></i>
+      </div>
+      <div>
+        <div class="stat-number">{{ total_candidates }}</div>
+        <div class="stat-label">Active Candidates</div>
+      </div>
+    </div>
+
+    <div class="stat-item">
+      <div class="stat-icon" style="background: #fffbeb; color: #d97706;">
+        <i data-lucide="send" style="width: 26px; height: 26px;"></i>
+      </div>
+      <div>
+        <div class="stat-number">{{ total_applications }}</div>
+        <div class="stat-label">Applications Processed</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Explore Categories Section -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Explore by Industry</h2>
+        <p class="section-desc">Browse thousands of opportunities across leading domains.</p>
+      </div>
+      <a href="{{ url_for('job_listings') }}" class="btn btn-outline btn-sm">
+        <span>View All Categories</span>
+        <i data-lucide="arrow-right" style="width: 16px; height: 16px;"></i>
+      </a>
+    </div>
+
+    <div class="category-grid">
+      {% for cat in category_counts %}
+        <a href="{{ url_for('job_listings', category=cat.id) }}" class="category-card">
+          <div class="category-icon" style="background: {{ cat.color }};">
+            <i data-lucide="{{ cat.icon }}" style="width: 24px; height: 24px;"></i>
+          </div>
+          <div class="category-info">
+            <h3>{{ cat.name }}</h3>
+            <p>{{ cat.job_count }} open position{% if cat.job_count != 1 %}s{% endif %}</p>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Featured Jobs Section -->
+<section class="section" style="background: #ffffff; border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="badge badge-purple" style="margin-bottom: 0.5rem;">Hand-picked Highlights</div>
+        <h2 class="section-title">Featured Opportunities</h2>
+        <p class="section-desc">Top compensation packages from verified high-growth teams.</p>
+      </div>
+      <a href="{{ url_for('job_listings') }}" class="btn btn-primary">
+        <span>Browse All {{ total_jobs }} Jobs</span>
+        <i data-lucide="arrow-up-right" style="width: 16px; height: 16px;"></i>
+      </a>
+    </div>
+
+    <div class="jobs-grid">
+      {% for job in featured_jobs %}
+        <div class="job-card featured-card">
+          <div>
+            <div class="job-card-header">
+              <div class="company-snippet">
+                <div class="company-logo-box">
+                  <i data-lucide="{{ job.logo_icon or 'building' }}" style="width: 24px; height: 24px;"></i>
+                </div>
+                <div>
+                  <span class="company-name">{{ job.company_name }}</span>
+                  <h3 class="job-title">
+                    <a href="{{ url_for('job_detail', job_id=job.id) }}">{{ job.title }}</a>
+                  </h3>
+                </div>
+              </div>
+
+              {% if current_user and current_user.role == 'seeker' %}
+                <button type="button" class="save-btn js-save-job-btn {% if job.id in saved_job_ids %}active{% endif %}" data-job-id="{{ job.id }}" title="Bookmark Job">
+                  <i data-lucide="{% if job.id in saved_job_ids %}bookmark-check{% else %}bookmark{% endif %}" style="width: 17px; height: 17px;"></i>
+                </button>
+              {% endif %}
+            </div>
+
+            <div class="job-meta-row">
+              <span class="job-meta-item">
+                <i data-lucide="map-pin" style="width: 14px; height: 14px;"></i>
+                {{ job.location }}
+              </span>
+              {% if job.is_remote %}
+                <span class="badge badge-green">Remote</span>
+              {% endif %}
+              <span class="job-meta-item">
+                <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
+                {{ job.job_type }}
+              </span>
+            </div>
+
+            <div class="job-tags">
+              <span class="badge badge-blue">{{ job.category_name }}</span>
+              <span class="badge badge-purple">{{ job.experience_level }}</span>
+            </div>
+          </div>
+
+          <div class="job-card-footer">
+            <div>
+              {% if job.salary_min and job.salary_max %}
+                <div class="salary-tag">${{ "{:,}".format(job.salary_min) }} - ${{ "{:,}".format(job.salary_max) }}</div>
+                <div class="salary-period">per year / {{ job.salary_currency }}</div>
+              {% else %}
+                <div class="salary-tag">Competitive</div>
+                <div class="salary-period">DOE</div>
+              {% endif %}
+            </div>
+
+            <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn btn-secondary btn-sm">
+              <span>View Details</span>
+              <i data-lucide="chevron-right" style="width: 14px; height: 14px;"></i>
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- How It Works / Value Proposition -->
+<section class="section">
+  <div class="container">
+    <div style="text-align: center; max-width: 650px; margin: 0 auto 3.5rem;">
+      <h2 class="section-title">Designed for Fast-Paced Careers</h2>
+      <p class="section-desc">A transparent, direct recruitment workflow built for both job seekers and hiring managers.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+      <div class="card" style="text-align: center; padding: 2.5rem 2rem;">
+        <div style="width: 64px; height: 64px; border-radius: var(--radius-full); background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+          <i data-lucide="file-check" style="width: 32px; height: 32px;"></i>
+        </div>
+        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.75rem;">1-Click Applications</h3>
+        <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">
+          Save your verified resume and portfolio to apply immediately across top openings without redundant forms.
+        </p>
+      </div>
+
+      <div class="card" style="text-align: center; padding: 2.5rem 2rem;">
+        <div style="width: 64px; height: 64px; border-radius: var(--radius-full); background: #fdf2f8; color: #db2777; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+          <i data-lucide="activity" style="width: 32px; height: 32px;"></i>
+        </div>
+        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.75rem;">Live Status Tracking</h3>
+        <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">
+          Never wonder what happened to your application. View live stages: Applied, Reviewing, Shortlisted, and Interview.
+        </p>
+      </div>
+
+      <div class="card" style="text-align: center; padding: 2.5rem 2rem;">
+        <div style="width: 64px; height: 64px; border-radius: var(--radius-full); background: #ecfdf5; color: #059669; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+          <i data-lucide="users" style="width: 32px; height: 32px;"></i>
+        </div>
+        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.75rem;">Employer Management</h3>
+        <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">
+          Hiring managers receive applications with candidate resumes, leave internal feedback, and update statuses with one tap.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Employer CTA Card -->
+<section style="padding: 0 0 5rem;">
+  <div class="container">
+    <div style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); border-radius: var(--radius-xl); padding: 4rem 3rem; color: #ffffff; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 2rem; box-shadow: var(--shadow-xl);">
+      <div style="max-width: 600px;">
+        <div class="badge badge-purple" style="margin-bottom: 1rem; background: rgba(255, 255, 255, 0.15); color: #ffffff;">Hiring Platform</div>
+        <h2 style="font-family: var(--font-display); font-size: 2.4rem; font-weight: 800; margin-bottom: 1rem; line-height: 1.2;">
+          Hiring top talent for your team?
+        </h2>
+        <p style="color: #c7d2fe; font-size: 1.05rem; line-height: 1.6;">
+          Post jobs to qualified candidates, manage incoming candidate resumes with ease, and organize interview stages.
+        </p>
+      </div>
+
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <a href="{{ url_for('demo_login', role='employer') }}" class="btn btn-primary btn-lg" style="background: #ffffff; color: var(--primary);">
+          <i data-lucide="sparkles" style="width: 18px; height: 18px;"></i>
+          <span>Try Employer Demo</span>
+        </a>
+        <a href="{{ url_for('employer_create_job') }}" class="btn btn-outline btn-lg" style="border-color: rgba(255, 255, 255, 0.4); color: #ffffff;">
+          <span>Post a Job Today</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

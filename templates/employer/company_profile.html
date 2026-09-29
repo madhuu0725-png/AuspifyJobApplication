@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Company Profile — JobConnect{% endblock %}
+
+{% block content %}
+<div class="container container-narrow" style="padding-top: 3rem; padding-bottom: 5rem;">
+
+  <div style="margin-bottom: 2rem;">
+    <a href="{{ url_for('employer_dashboard') }}" style="display: inline-flex; align-items: center; gap: 0.35rem; color: var(--text-muted); font-size: 0.88rem; margin-bottom: 0.75rem;">
+      <i data-lucide="arrow-left" style="width: 15px; height: 15px;"></i>
+      <span>Back to Employer Hub</span>
+    </a>
+    <h1 style="font-family: var(--font-display); font-size: 2.2rem; font-weight: 800;">
+      Company Profile & Branding
+    </h1>
+    <p style="color: var(--text-muted); font-size: 1rem;">
+      Present your company mission and culture to candidates browsing your jobs.
+    </p>
+  </div>
+
+  <form method="POST">
+    <div class="card" style="padding: 2rem; margin-bottom: 2rem;">
+      <div class="form-row">
+        <div class="form-group" style="flex: 2;">
+          <label class="form-label" for="companyName">Company Name *</label>
+          <input type="text" id="companyName" name="name" class="form-control" value="{{ company.name if company else '' }}" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="companyIcon">Logo Icon</label>
+          <select id="companyIcon" name="logo_icon" class="form-control">
+            <option value="building-2" {% if company and company.logo_icon == 'building-2' %}selected{% endif %}>Building</option>
+            <option value="cloud" {% if company and company.logo_icon == 'cloud' %}selected{% endif %}>Cloud</option>
+            <option value="shield-check" {% if company and company.logo_icon == 'shield-check' %}selected{% endif %}>Shield / Security</option>
+            <option value="palette" {% if company and company.logo_icon == 'palette' %}selected{% endif %}>Palette / Creative</option>
+            <option value="cpu" {% if company and company.logo_icon == 'cpu' %}selected{% endif %}>Tech / Chip</option>
+            <option value="code" {% if company and company.logo_icon == 'code' %}selected{% endif %}>Code / Software</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="companyTagline">Company Tagline</label>
+        <input type="text" id="companyTagline" name="tagline" class="form-control" value="{{ company.tagline if company and company.tagline else '' }}" placeholder="e.g. Next-Gen Cloud and AI Infrastructure">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="companyWebsite">Official Website</label>
+          <input type="url" id="companyWebsite" name="website" class="form-control" value="{{ company.website if company and company.website else '' }}" placeholder="https://company.example">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="companyIndustry">Industry</label>
+          <input type="text" id="companyIndustry" name="industry" class="form-control" value="{{ company.industry if company and company.industry else '' }}" placeholder="e.g. Technology & AI">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="companyLocation">Headquarters Location</label>
+          <input type="text" id="companyLocation" name="location" class="form-control" value="{{ company.location if company and company.location else '' }}" placeholder="e.g. San Francisco, CA">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="companySize">Company Size</label>
+          <select id="companySize" name="size" class="form-control">
+            <option value="1-10 employees" {% if company and company.size == '1-10 employees' %}selected{% endif %}>1-10 employees (Seed)</option>
+            <option value="10-50 employees" {% if company and company.size == '10-50 employees' %}selected{% endif %}>10-50 employees (Early Stage)</option>
+            <option value="50-200 employees" {% if company and company.size == '50-200 employees' %}selected{% endif %}>50-200 employees (Growth)</option>
+            <option value="200-500 employees" {% if company and company.size == '200-500 employees' %}selected{% endif %}>200-500 employees (Scale-up)</option>
+            <option value="500+ employees" {% if company and company.size == '500+ employees' %}selected{% endif %}>500+ employees (Enterprise)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label" for="companyDescription">About the Company</label>
+        <textarea id="companyDescription" name="description" class="form-control" rows="5" placeholder="Share your mission, values, work culture, and what makes your team unique...">{{ company.description if company and company.description else '' }}</textarea>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+      <a href="{{ url_for('employer_dashboard') }}" class="btn btn-secondary">Cancel</a>
+      <button type="submit" class="btn btn-primary btn-lg">
+        <i data-lucide="save" style="width: 18px; height: 18px;"></i>
+        <span>Save Company Profile</span>
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

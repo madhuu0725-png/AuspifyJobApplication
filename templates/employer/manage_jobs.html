@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Job Postings — JobConnect{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2.5rem; padding-bottom: 5rem;">
+
+  <div class="dashboard-header" style="background: transparent; border-bottom: none; padding: 0 0 2rem;">
+    <div class="dashboard-title-row">
+      <div>
+        <a href="{{ url_for('employer_dashboard') }}" style="display: inline-flex; align-items: center; gap: 0.35rem; color: var(--text-muted); font-size: 0.88rem; margin-bottom: 0.5rem;">
+          <i data-lucide="arrow-left" style="width: 15px; height: 15px;"></i>
+          <span>Back to Employer Hub</span>
+        </a>
+        <h1 style="font-family: var(--font-display); font-size: 2.2rem; font-weight: 800;">
+          All Job Postings ({{ jobs|length }})
+        </h1>
+        <p style="color: var(--text-muted); font-size: 1rem;">
+          Activate, edit, close, or review candidates for all company listings.
+        </p>
+      </div>
+
+      <a href="{{ url_for('employer_create_job') }}" class="btn btn-primary">
+        <i data-lucide="plus-circle" style="width: 16px; height: 16px;"></i>
+        <span>Post New Job</span>
+      </a>
+    </div>
+  </div>
+
+  {% if jobs %}
+    <div class="data-table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Role Title</th>
+            <th>Category</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Applicants</th>
+            <th>Posted</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for job in jobs %}
+            <tr>
+              <td>
+                <div style="font-weight: 700; font-size: 0.98rem;">
+                  <a href="{{ url_for('job_detail', job_id=job.id) }}">{{ job.title }}</a>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">
+                  {{ job.location }} {% if job.is_remote %}(Remote){% endif %}
+                </div>
+              </td>
+              <td>
+                <span class="badge badge-blue">{{ job.category_name }}</span>
+              </td>
+              <td>{{ job.job_type }}</td>
+              <td>
+                <span class="badge {% if job.status == 'active' %}badge-green{% elif job.status == 'draft' %}badge-amber{% else %}badge-gray{% endif %}">
+                  {{ job.status|capitalize }}
+                </span>
+              </td>
+              <td>
+                <a href="{{ url_for('employer_applications', job_id=job.id) }}" style="font-weight: 700; color: var(--primary); display: inline-flex; align-items: center; gap: 0.3rem;">
+                  <i data-lucide="users" style="width: 14px; height: 14px;"></i>
+                  <span>{{ job.applicant_count }} candidates</span>
+                </a>
+              </td>
+              <td>{{ job.created_at[:10] }}</td>
+              <td style="text-align: right;">
+                <div style="display: inline-flex; gap: 0.4rem;">
+                  <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn btn-secondary btn-sm" title="View Public Listing">
+                    <i data-lucide="eye" style="width: 14px; height: 14px;"></i>
+                  </a>
+                  <a href="{{ url_for('employer_edit_job', job_id=job.id) }}" class="btn btn-outline btn-sm" title="Edit Job Details">
+                    <i data-lucide="edit" style="width: 14px; height: 14px;"></i>
+                  </a>
+                  <form action="{{ url_for('employer_toggle_job_status', job_id=job.id) }}" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-outline btn-sm" title="{% if job.status == 'active' %}Close Listing{% else %}Reopen Listing{% endif %}">
+                      {% if job.status == 'active' %}
+                        <i data-lucide="power-off" style="width: 14px; height: 14px;"></i>
+                      {% else %}
+                        <i data-lucide="check" style="width: 14px; height: 14px;"></i>
+                      {% endif %}
+                    </button>
+                  </form>
+                  <form action="{{ url_for('employer_delete_job', job_id=job.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Delete this job posting permanently?');">
+                    <button type="submit" class="btn btn-danger btn-sm" title="Delete Job">
+                      <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="card" style="text-align: center; padding: 4rem 2rem;">
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem;">You haven't posted any jobs yet.</p>
+      <a href="{{ url_for('employer_create_job') }}" class="btn btn-primary">Create Your First Job Posting</a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

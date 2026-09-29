@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block title %}Applicant Pipeline — JobConnect{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2.5rem; padding-bottom: 5rem;">
+
+  <!-- Header -->
+  <div class="dashboard-header" style="background: transparent; border-bottom: none; padding: 0 0 1.5rem;">
+    <div class="dashboard-title-row">
+      <div>
+        <a href="{{ url_for('employer_dashboard') }}" style="display: inline-flex; align-items: center; gap: 0.35rem; color: var(--text-muted); font-size: 0.88rem; margin-bottom: 0.5rem;">
+          <i data-lucide="arrow-left" style="width: 15px; height: 15px;"></i>
+          <span>Back to Employer Hub</span>
+        </a>
+        <h1 style="font-family: var(--font-display); font-size: 2.2rem; font-weight: 800;">
+          Candidate Pipeline ({{ applications|length }})
+        </h1>
+        <p style="color: var(--text-muted); font-size: 1rem;">
+          Review applicant resumes, advance candidates through hiring stages, and leave interview notes.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Bar -->
+  <div class="card" style="padding: 1.25rem 1.5rem; margin-bottom: 2rem;">
+    <form action="{{ url_for('employer_applications') }}" method="GET" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+      <!-- Job Filter -->
+      <div style="flex: 1; min-width: 240px;">
+        <label class="form-label" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Filter by Job Posting:</label>
+        <select name="job_id" class="form-control" onchange="this.form.submit()">
+          <option value="">All Job Postings</option>
+          {% for j in employer_jobs %}
+            <option value="{{ j.id }}" {% if filter_job_id == j.id|string %}selected{% endif %}>{{ j.title }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Status Filter -->
+      <div style="flex: 1; min-width: 200px;">
+        <label class="form-label" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Filter by Stage:</label>
+        <select name="status" class="form-control" onchange="this.form.submit()">
+          <option value="">All Stages</option>
+          <option value="applied" {% if filter_status == 'applied' %}selected{% endif %}>Applied</option>
+          <option value="reviewing" {% if filter_status == 'reviewing' %}selected{% endif %}>Reviewing</option>
+          <option value="shortlisted" {% if filter_status == 'shortlisted' %}selected{% endif %}>Shortlisted</option>
+          <option value="interview" {% if filter_status == 'interview' %}selected{% endif %}>Interview Scheduled</option>
+          <option value="accepted" {% if filter_status == 'accepted' %}selected{% endif %}>Accepted / Hired</option>
+          <option value="rejected" {% if filter_status == 'rejected' %}selected{% endif %}>Rejected</option>
+        </select>
+      </div>
+
+      <div style="align-self: flex-end; padding-bottom: 2px;">
+        <a href="{{ url_for('employer_applications') }}" class="btn btn-outline">Reset Filters</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Candidates List -->
+  {% if applications %}
+    <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+      {% for app in applications %}
+        <div class="card" style="padding: 1.5rem 1.75rem;">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <!-- Candidate Info -->
+            <div style="display: flex; align-items: flex-start; gap: 1rem;">
+              <div class="user-avatar-sm" style="width: 48px; height: 48px; font-size: 1.1rem; background: linear-gradient(135deg, #0ea5e9, #6366f1); flex-shrink: 0;">
+                {{ app.full_name[:1] }}
+              </div>
+              <div>
+                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                  <h3 style="font-size: 1.15rem; font-weight: 800;">{{ app.full_name }}</h3>
+                  <span class="status-pill status-{{ app.status }}">
+                    {{ app.status }}
+                  </span>
+                </div>
+
+                <div style="font-size: 0.88rem; color: var(--text-muted); margin-top: 0.2rem;">
+                  Applied for <strong><a href="{{ url_for('job_detail', job_id=app.job_id) }}" style="color: var(--primary);">{{ app.job_title }}</a></strong>
+                  &bull; Received on {{ app.applied_at[:10] }}
+                </div>
+
+                <div style="display: flex; gap: 1.25rem; font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem; flex-wrap: wrap;">
+                  <span style="display: flex; align-items: center; gap: 0.35rem;">
+                    <i data-lucide="mail" style="width: 14px; height: 14px;"></i>
+                    <a href="mailto:{{ app.email }}">{{ app.email }}</a>
+                  </span>
+                  {% if app.phone %}
+                    <span style="display: flex; align-items: center; gap: 0.35rem;">
+                      <i data-lucide="phone" style="width: 14px; height: 14px;"></i>
+                      {{ app.phone }}
+                    </span>
+                  {% endif %}
+                  {% if app.portfolio_url %}
+                    <span style="display: flex; align-items: center; gap: 0.35rem;">
+                      <i data-lucide="globe" style="width: 14px; height: 14px;"></i>
+                      <a href="{{ app.portfolio_url }}" target="_blank" rel="noopener" style="color: var(--primary); font-weight: 600;">
+                        Portfolio &rarr;
+                      </a>
+                    </span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+              <a href="{{ url_for('view_resume', filename=app.resume_filename) }}" target="_blank" class="btn btn-outline btn-sm">
+                <i data-lucide="file-text" style="width: 15px; height: 15px;"></i>
+                <span>View Resume</span>
+              </a>
+
+              <button type="button" class="btn btn-primary btn-sm" data-modal-target="#candidateModal-{{ app.id }}">
+                <i data-lucide="user-check" style="width: 15px; height: 15px;"></i>
+                <span>Update Stage</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Cover letter preview & notes if present -->
+          {% if app.cover_letter %}
+            <div style="background: var(--bg-surface); border-radius: var(--radius-md); padding: 1rem 1.25rem; margin-top: 1rem; font-size: 0.88rem; color: #334155; border: 1px solid var(--border-subtle);">
+              <strong style="display: block; font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.35rem;">Cover Note:</strong>
+              <div style="white-space: pre-line;">{{ app.cover_letter }}</div>
+            </div>
+          {% endif %}
+
+          {% if app.employer_notes %}
+            <div style="background: #f0fdf4; border-left: 4px solid var(--accent-emerald); padding: 0.75rem 1.25rem; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin-top: 0.75rem; font-size: 0.85rem; color: #166534;">
+              <strong>Internal Notes:</strong> {{ app.employer_notes }}
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Stage Update Modal for Candidate -->
+        <div class="modal-overlay" id="candidateModal-{{ app.id }}">
+          <div class="modal-card">
+            <div class="modal-header">
+              <div>
+                <h3 class="modal-title">Update Candidate Status</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">{{ app.full_name }} &bull; {{ app.job_title }}</p>
+              </div>
+              <button type="button" class="modal-close" data-modal-close>&times;</button>
+            </div>
+
+            <form action="{{ url_for('update_application_status', app_id=app.id) }}" method="POST">
+              <div class="modal-body">
+                <div class="form-group">
+                  <label class="form-label" for="statusSelect-{{ app.id }}">Candidate Stage *</label>
+                  <select id="statusSelect-{{ app.id }}" name="status" class="form-control" required>
+                    <option value="applied" {% if app.status == 'applied' %}selected{% endif %}>Applied (Initial Review)</option>
+                    <option value="reviewing" {% if app.status == 'reviewing' %}selected{% endif %}>Reviewing (Team Evaluating)</option>
+                    <option value="shortlisted" {% if app.status == 'shortlisted' %}selected{% endif %}>Shortlisted for Call</option>
+                    <option value="interview" {% if app.status == 'interview' %}selected{% endif %}>Interview Scheduled</option>
+                    <option value="accepted" {% if app.status == 'accepted' %}selected{% endif %}>Accepted / Offer Extended</option>
+                    <option value="rejected" {% if app.status == 'rejected' %}selected{% endif %}>Rejected / Declined</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="notesText-{{ app.id }}">Hiring Team Feedback / Interview Instructions</label>
+                  <textarea id="notesText-{{ app.id }}" name="employer_notes" class="form-control" rows="4" placeholder="e.g. Portfolio interview scheduled for Friday at 2pm PST via Google Meet.">{{ app.employer_notes or '' }}</textarea>
+                  <div class="form-hint">Notes will be displayed to the candidate in their application tracker.</div>
+                </div>
+
+                <div style="background: var(--bg-surface); padding: 1rem; border-radius: var(--radius-md); font-size: 0.85rem; color: var(--text-muted);">
+                  <strong style="color: var(--text-main);">Resume on File:</strong> {{ app.resume_original_name }}
+                  <div style="margin-top: 0.25rem;">
+                    <a href="{{ url_for('view_resume', filename=app.resume_filename) }}" target="_blank" style="color: var(--primary); text-decoration: underline;">
+                      Open resume in new tab &rarr;
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+                <button type="submit" class="btn btn-primary">
+                  <i data-lucide="check" style="width: 16px; height: 16px;"></i>
+                  <span>Save & Notify Seeker</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card" style="text-align: center; padding: 4rem 2rem;">
+      <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--bg-surface); color: var(--text-muted); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem;">
+        <i data-lucide="users" style="width: 28px; height: 28px;"></i>
+      </div>
+      <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem;">No candidates matching criteria</h3>
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Check back once candidates submit applications, or adjust filters.</p>
+      <a href="{{ url_for('employer_applications') }}" class="btn btn-outline">Clear Filters</a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

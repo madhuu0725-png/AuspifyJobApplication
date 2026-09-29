@@ -1,0 +1,305 @@
+{% extends 'base.html' %}
+
+{% block title %}Candidate Hub — JobConnect{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2.5rem; padding-bottom: 5rem;">
+
+  <!-- Header Banner -->
+  <div class="dashboard-header" style="background: transparent; border-bottom: none; padding: 0 0 2rem;">
+    <div class="dashboard-title-row">
+      <div>
+        <div class="badge badge-blue" style="margin-bottom: 0.5rem;">Job Seeker Portal</div>
+        <h1 style="font-family: var(--font-display); font-size: 2.2rem; font-weight: 800;">
+          Welcome, {{ current_user.name }}
+        </h1>
+        <p style="color: var(--text-muted); font-size: 1rem; margin-top: 0.25rem;">
+          {{ current_user.title or 'Candidate' }} &bull; Track all your submitted applications and interview milestones.
+        </p>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem;">
+        <a href="{{ url_for('seeker_profile') }}" class="btn btn-outline">
+          <i data-lucide="user" style="width: 16px; height: 16px;"></i>
+          <span>Update Profile & Resume</span>
+        </a>
+        <a href="{{ url_for('job_listings') }}" class="btn btn-primary">
+          <i data-lucide="search" style="width: 16px; height: 16px;"></i>
+          <span>Explore Openings</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Candidate Metrics -->
+  <div class="dashboard-metrics-grid">
+    <div class="metric-card">
+      <div class="metric-icon-box" style="background: #e0e7ff; color: #4338ca;">
+        <i data-lucide="send" style="width: 24px; height: 24px;"></i>
+      </div>
+      <div>
+        <div class="metric-number">{{ total_applied }}</div>
+        <div class="metric-title">Total Applications</div>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon-box" style="background: #f3e8ff; color: #7e22ce;">
+        <i data-lucide="clock" style="width: 24px; height: 24px;"></i>
+      </div>
+      <div>
+        <div class="metric-number">{{ reviewing_count }}</div>
+        <div class="metric-title">Under Review</div>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon-box" style="background: #cffafe; color: #0e7490;">
+        <i data-lucide="calendar" style="width: 24px; height: 24px;"></i>
+      </div>
+      <div>
+        <div class="metric-number">{{ interviews_count }}</div>
+        <div class="metric-title">Interviews Scheduled</div>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon-box" style="background: #d1fae5; color: #047857;">
+        <i data-lucide="check-circle" style="width: 24px; height: 24px;"></i>
+      </div>
+      <div>
+        <div class="metric-number">{{ accepted_count }}</div>
+        <div class="metric-title">Offers Received</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Tabs: My Applications, Saved Bookmarks, Activity Notifications -->
+  <div class="js-tabs-container">
+    <div class="tabs-nav">
+      <button type="button" class="tab-btn active" data-tab-target="#tab-applications">
+        <i data-lucide="briefcase" style="width: 18px; height: 18px;"></i>
+        <span>My Applications ({{ applications|length }})</span>
+      </button>
+
+      <button type="button" class="tab-btn" data-tab-target="#tab-saved">
+        <i data-lucide="bookmark" style="width: 18px; height: 18px;"></i>
+        <span>Saved Jobs ({{ saved_jobs|length }})</span>
+      </button>
+
+      <button type="button" class="tab-btn" data-tab-target="#tab-notifications">
+        <i data-lucide="bell" style="width: 18px; height: 18px;"></i>
+        <span>Activity Updates ({{ notifications|length }})</span>
+      </button>
+    </div>
+
+    <!-- Tab 1: Applications Tracking -->
+    <div class="tab-pane" id="tab-applications">
+      {% if applications %}
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+          {% for app in applications %}
+            <div class="card" style="padding: 1.75rem;">
+              <div style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                  <div class="company-logo-box" style="width: 50px; height: 50px;">
+                    <i data-lucide="{{ app.logo_icon or 'building' }}" style="width: 26px; height: 26px;"></i>
+                  </div>
+                  <div>
+                    <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted);">{{ app.company_name }}</span>
+                    <h3 style="font-size: 1.25rem; font-weight: 800; margin: 0.15rem 0;">
+                      <a href="{{ url_for('job_detail', job_id=app.job_id) }}">{{ app.job_title }}</a>
+                    </h3>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); display: flex; gap: 1rem; flex-wrap: wrap;">
+                      <span>Applied on {{ app.applied_at[:10] }}</span>
+                      <span>&bull;</span>
+                      <span>{{ app.job_location }} {% if app.is_remote %}(Remote){% endif %}</span>
+                      <span>&bull;</span>
+                      <span>Resume: <strong>{{ app.resume_original_name or 'Submitted Resume' }}</strong></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                  <span class="status-pill status-{{ app.status }}">
+                    <i data-lucide="circle-dot" style="width: 12px; height: 12px;"></i>
+                    <span>{{ app.status }}</span>
+                  </span>
+
+                  <!-- Action menu -->
+                  <form action="{{ url_for('withdraw_application', application_id=app.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to withdraw this application?');">
+                    <button type="submit" class="btn btn-outline btn-sm" style="color: var(--accent-rose); border-color: #fecdd3;" title="Withdraw Application">
+                      <span>Withdraw</span>
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+              <!-- Application Progress Stepper -->
+              <div style="background: var(--bg-surface); padding: 1.25rem 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1rem;">
+                <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.75rem;">
+                  Application Status Progress:
+                </div>
+                
+                <div style="display: flex; align-items: center; justify-content: space-between; position: relative;">
+                  {% set stages = ['applied', 'reviewing', 'shortlisted', 'interview', 'accepted'] %}
+                  
+                  {# Determine index #}
+                  {% set current_idx = 0 %}
+                  {% if app.status == 'applied' %}{% set current_idx = 0 %}
+                  {% elif app.status == 'reviewing' %}{% set current_idx = 1 %}
+                  {% elif app.status == 'shortlisted' %}{% set current_idx = 2 %}
+                  {% elif app.status == 'interview' %}{% set current_idx = 3 %}
+                  {% elif app.status == 'accepted' %}{% set current_idx = 4 %}
+                  {% elif app.status == 'rejected' %}{% set current_idx = -1 %}
+                  {% endif %}
+
+                  {% for stage in stages %}
+                    <div style="display: flex; flex-direction: column; align-items: center; z-index: 2; flex: 1;">
+                      <div style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700;
+                        {% if app.status == 'rejected' %}
+                          background: #fee2e2; color: #991b1b; border: 2px solid #ef4444;
+                        {% elif loop.index0 <= current_idx %}
+                          background: var(--primary); color: #ffffff; box-shadow: 0 0 10px rgba(79, 70, 229, 0.4);
+                        {% else %}
+                          background: #ffffff; color: var(--text-muted); border: 2px solid var(--border-strong);
+                        {% endif %}">
+                        {% if loop.index0 <= current_idx %}
+                          <i data-lucide="check" style="width: 14px; height: 14px;"></i>
+                        {% else %}
+                          {{ loop.index }}
+                        {% endif %}
+                      </div>
+                      <span style="font-size: 0.78rem; font-weight: 600; margin-top: 0.35rem; text-transform: capitalize; color: {% if loop.index0 <= current_idx %}var(--primary){% else %}var(--text-muted){% endif %};">
+                        {{ stage }}
+                      </span>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <!-- Employer Feedback / Notes -->
+              {% if app.employer_notes %}
+                <div style="background: #f0fdf4; border-left: 4px solid var(--accent-emerald); padding: 0.9rem 1.25rem; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 0.9rem;">
+                  <strong style="color: #166534; display: block; margin-bottom: 0.2rem;">Hiring Team Notes:</strong>
+                  <span style="color: #14532d;">{{ app.employer_notes }}</span>
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="card" style="text-align: center; padding: 4rem 2rem;">
+          <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--bg-surface); color: var(--text-muted); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem;">
+            <i data-lucide="inbox" style="width: 28px; height: 28px;"></i>
+          </div>
+          <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem;">No job applications submitted yet</h3>
+          <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Discover vetted engineering and design roles and apply directly.</p>
+          <a href="{{ url_for('job_listings') }}" class="btn btn-primary">Browse Openings</a>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Tab 2: Saved Jobs -->
+    <div class="tab-pane" id="tab-saved" style="display: none;">
+      {% if saved_jobs %}
+        <div class="jobs-grid">
+          {% for job in saved_jobs %}
+            <div class="job-card">
+              <div>
+                <div class="job-card-header">
+                  <div class="company-snippet">
+                    <div class="company-logo-box">
+                      <i data-lucide="{{ job.logo_icon or 'building' }}" style="width: 24px; height: 24px;"></i>
+                    </div>
+                    <div>
+                      <span class="company-name">{{ job.company_name }}</span>
+                      <h3 class="job-title">
+                        <a href="{{ url_for('job_detail', job_id=job.id) }}">{{ job.title }}</a>
+                      </h3>
+                    </div>
+                  </div>
+
+                  <form action="{{ url_for('toggle_save_job', job_id=job.id) }}" method="POST">
+                    <button type="submit" class="save-btn active" title="Remove Bookmark">
+                      <i data-lucide="bookmark-x" style="width: 17px; height: 17px;"></i>
+                    </button>
+                  </form>
+                </div>
+
+                <div class="job-meta-row">
+                  <span class="job-meta-item">
+                    <i data-lucide="map-pin" style="width: 14px; height: 14px;"></i>
+                    {{ job.location }}
+                  </span>
+                  {% if job.is_remote %}
+                    <span class="badge badge-green">Remote</span>
+                  {% endif %}
+                  <span class="job-meta-item">
+                    <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
+                    {{ job.job_type }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="job-card-footer">
+                <div>
+                  {% if job.salary_min and job.salary_max %}
+                    <div class="salary-tag">${{ "{:,}".format(job.salary_min) }} - ${{ "{:,}".format(job.salary_max) }}</div>
+                  {% else %}
+                    <div class="salary-tag">Competitive</div>
+                  {% endif %}
+                </div>
+
+                <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn btn-primary btn-sm">
+                  <span>View & Apply</span>
+                </a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="card" style="text-align: center; padding: 4rem 2rem;">
+          <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--bg-surface); color: var(--text-muted); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem;">
+            <i data-lucide="bookmark" style="width: 28px; height: 28px;"></i>
+          </div>
+          <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem;">No saved jobs yet</h3>
+          <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Click the bookmark icon on any job card to save it for later review.</p>
+          <a href="{{ url_for('job_listings') }}" class="btn btn-primary">Find Jobs to Save</a>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Tab 3: Notifications -->
+    <div class="tab-pane" id="tab-notifications" style="display: none;">
+      {% if notifications %}
+        <div class="card" style="padding: 0; overflow: hidden;">
+          {% for notif in notifications %}
+            <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;">
+              <div style="display: flex; align-items: flex-start; gap: 1rem;">
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  <i data-lucide="bell" style="width: 18px; height: 18px;"></i>
+                </div>
+                <div>
+                  <h4 style="font-size: 0.98rem; font-weight: 700; margin-bottom: 0.2rem;">{{ notif.title }}</h4>
+                  <p style="font-size: 0.9rem; color: #334155;">{{ notif.message }}</p>
+                  <span style="font-size: 0.78rem; color: var(--text-muted); display: inline-block; margin-top: 0.35rem;">
+                    {{ notif.created_at }}
+                  </span>
+                </div>
+              </div>
+
+              {% if notif.link %}
+                <a href="{{ notif.link }}" class="btn btn-secondary btn-sm" style="flex-shrink: 0;">View</a>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="card" style="text-align: center; padding: 4rem 2rem;">
+          <p style="color: var(--text-muted);">No activity updates yet.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

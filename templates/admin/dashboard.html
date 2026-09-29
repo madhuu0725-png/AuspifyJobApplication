@@ -1,0 +1,340 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Management Center — JobConnect{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2.5rem; padding-bottom: 5rem;">
+
+  <!-- Admin Title Banner -->
+  <div class="dashboard-header" style="background: transparent; border-bottom: none; padding: 0 0 2rem;">
+    <div class="dashboard-title-row">
+      <div>
+        <div class="badge badge-purple" style="margin-bottom: 0.5rem;">Platform Administration</div>
+        <h1 style="font-family: var(--font-display); font-size: 2.2rem; font-weight: 800;">
+          System Overview & Control
+        </h1>
+        <p style="color: var(--text-muted); font-size: 1rem; margin-top: 0.25rem;">
+          Platform metrics, user governance, content moderation, and taxonomy management.
+        </p>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem;">
+        <span class="badge badge-green" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+          <i data-lucide="check-circle" style="width: 15px; height: 15px;"></i>
+          <span>Database Online & Healthy</span>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Metrics Grid -->
+  <div class="dashboard-metrics-grid">
+    <div class="metric-card">
+      <div class="metric-icon-box" style="background: #e0e7ff; color: #4338ca;">
+        <i data-lucide="users" style="width: 24px; height: 24px;"></i>
+      </div>
+      <div>
+        <div class="metric-number">{{ stats.total_users }}</div>
+        <div class="metric-title">Total Users ({{ stats.total_seekers }} Seekers, {{ stats.total_employers }} Employers)</div>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon-box" style="background: #ecfdf5; color: #047857;">
+        <i data-lucide="briefcase" style="width: 24px; height: 24px;"></i>
+      </div>
+      <div>
+        <div class="metric-number">{{ stats.active_jobs }}</div>
+        <div class="metric-title">Active Jobs ({{ stats.total_jobs }} Total)</div>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon-box" style="background: #fdf2f8; color: #be185d;">
+        <i data-lucide="send" style="width: 24px; height: 24px;"></i>
+      </div>
+      <div>
+        <div class="metric-number">{{ stats.total_applications }}</div>
+        <div class="metric-title">Candidate Applications</div>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon-box" style="background: #fffbeb; color: #b45309;">
+        <i data-lucide="award" style="width: 24px; height: 24px;"></i>
+      </div>
+      <div>
+        <div class="metric-number">{{ stats.successful_hires }}</div>
+        <div class="metric-title">Confirmed Hires</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Management Tabs -->
+  <div class="js-tabs-container">
+    <div class="tabs-nav">
+      <button type="button" class="tab-btn active" data-tab-target="#tab-admin-users">
+        <i data-lucide="users" style="width: 18px; height: 18px;"></i>
+        <span>User Accounts ({{ users|length }})</span>
+      </button>
+
+      <button type="button" class="tab-btn" data-tab-target="#tab-admin-jobs">
+        <i data-lucide="briefcase" style="width: 18px; height: 18px;"></i>
+        <span>Job Moderation ({{ jobs|length }})</span>
+      </button>
+
+      <button type="button" class="tab-btn" data-tab-target="#tab-admin-categories">
+        <i data-lucide="layers" style="width: 18px; height: 18px;"></i>
+        <span>Categories ({{ categories|length }})</span>
+      </button>
+
+      <button type="button" class="tab-btn" data-tab-target="#tab-admin-applications">
+        <i data-lucide="file-check" style="width: 18px; height: 18px;"></i>
+        <span>Global Applications Stream</span>
+      </button>
+    </div>
+
+    <!-- Tab 1: User Accounts Management -->
+    <div class="tab-pane" id="tab-admin-users">
+      <div class="data-table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>User Name & Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Joined Date</th>
+              <th style="text-align: right;">Administrative Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in users %}
+              <tr>
+                <td>
+                  <div style="font-weight: 700;">{{ u.name }}</div>
+                  <div style="font-size: 0.82rem; color: var(--text-muted);">{{ u.email }}</div>
+                </td>
+                <td>
+                  {% if u.role == 'admin' %}
+                    <span class="badge badge-purple">Admin</span>
+                  {% elif u.role == 'employer' %}
+                    <span class="badge badge-blue">Employer</span>
+                  {% else %}
+                    <span class="badge badge-green">Candidate</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if u.is_active == 1 %}
+                    <span class="badge badge-green">Active</span>
+                  {% else %}
+                    <span class="badge badge-rose">Suspended</span>
+                  {% endif %}
+                </td>
+                <td>{{ u.created_at[:10] }}</td>
+                <td style="text-align: right;">
+                  {% if u.id != current_user.id %}
+                    <div style="display: inline-flex; gap: 0.4rem;">
+                      <form action="{{ url_for('admin_toggle_user_status', user_id=u.id) }}" method="POST" style="display: inline;">
+                        <button type="submit" class="btn btn-outline btn-sm" title="{% if u.is_active == 1 %}Suspend Account{% else %}Activate Account{% endif %}">
+                          {% if u.is_active == 1 %}
+                            <span>Suspend</span>
+                          {% else %}
+                            <span>Activate</span>
+                          {% endif %}
+                        </button>
+                      </form>
+
+                      <form action="{{ url_for('admin_delete_user', user_id=u.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Permanently delete user {{ u.name }}? All related postings or applications will be removed.');">
+                        <button type="submit" class="btn btn-danger btn-sm" title="Delete User">
+                          <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                        </button>
+                      </form>
+                    </div>
+                  {% else %}
+                    <span style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">Current Session</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab 2: Job Moderation -->
+    <div class="tab-pane" id="tab-admin-jobs" style="display: none;">
+      <div class="data-table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Job Title & Company</th>
+              <th>Category</th>
+              <th>Featured</th>
+              <th>Status</th>
+              <th>Applicants</th>
+              <th style="text-align: right;">Moderation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for j in jobs %}
+              <tr>
+                <td>
+                  <div style="font-weight: 700;">
+                    <a href="{{ url_for('job_detail', job_id=j.id) }}" target="_blank">{{ j.title }}</a>
+                  </div>
+                  <div style="font-size: 0.82rem; color: var(--text-muted);">
+                    {{ j.company_name }} &bull; By {{ j.employer_name }}
+                  </div>
+                </td>
+                <td>
+                  <span class="badge badge-blue">{{ j.category_name }}</span>
+                </td>
+                <td>
+                  <form action="{{ url_for('admin_toggle_job_feature', job_id=j.id) }}" method="POST" style="display: inline;">
+                    <button type="submit" class="badge {% if j.is_featured %}badge-purple{% else %}badge-gray{% endif %}" style="cursor: pointer; border: none;">
+                      {% if j.is_featured %}★ Featured{% else %}☆ Standard{% endif %}
+                    </button>
+                  </form>
+                </td>
+                <td>
+                  <span class="badge {% if j.status == 'active' %}badge-green{% elif j.status == 'draft' %}badge-amber{% else %}badge-gray{% endif %}">
+                    {{ j.status|capitalize }}
+                  </span>
+                </td>
+                <td>{{ j.app_count }} applications</td>
+                <td style="text-align: right;">
+                  <div style="display: inline-flex; gap: 0.4rem;">
+                    <a href="{{ url_for('job_detail', job_id=j.id) }}" target="_blank" class="btn btn-secondary btn-sm" title="View Public Page">
+                      <i data-lucide="external-link" style="width: 14px; height: 14px;"></i>
+                    </a>
+                    <form action="{{ url_for('admin_delete_job', job_id=j.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Delete this job permanently from the platform?');">
+                      <button type="submit" class="btn btn-danger btn-sm" title="Remove Listing">
+                        <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab 3: Category Management -->
+    <div class="tab-pane" id="tab-admin-categories" style="display: none;">
+      <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; align-items: start;">
+        <!-- Categories Table -->
+        <div class="data-table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Icon</th>
+                <th>Active Jobs</th>
+                <th style="text-align: right;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cat in categories %}
+                <tr>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: 0.65rem;">
+                      <div style="width: 12px; height: 12px; border-radius: 50%; background: {{ cat.color }};"></div>
+                      <strong>{{ cat.name }}</strong>
+                    </div>
+                  </td>
+                  <td><code>{{ cat.icon }}</code></td>
+                  <td>{{ cat.job_count }} jobs</td>
+                  <td style="text-align: right;">
+                    {% if cat.job_count == 0 %}
+                      <form action="{{ url_for('admin_delete_category', cat_id=cat.id) }}" method="POST" onsubmit="return confirm('Delete category {{ cat.name }}?');">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                      </form>
+                    {% else %}
+                      <span style="font-size: 0.78rem; color: var(--text-light);">In Use</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Add Category Form -->
+        <div class="card" style="padding: 1.75rem;">
+          <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1.25rem;">Add New Industry Category</h3>
+          <form action="{{ url_for('admin_create_category') }}" method="POST">
+            <div class="form-group">
+              <label class="form-label" for="newCatName">Category Name *</label>
+              <input type="text" id="newCatName" name="name" class="form-control" placeholder="e.g. Cybersecurity & InfoSec" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="newCatIcon">Lucide Icon Name</label>
+              <input type="text" id="newCatIcon" name="icon" class="form-control" value="briefcase" placeholder="e.g. shield, code, cpu">
+              <div class="form-hint">Reference Lucide icon name (e.g. 'code', 'shield', 'database')</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="newCatColor">Accent Color</label>
+              <input type="color" id="newCatColor" name="color" class="form-control" value="#4f46e5" style="height: 42px; padding: 4px;">
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">
+              <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+              <span>Create Category</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 4: Global Applications Stream -->
+    <div class="tab-pane" id="tab-admin-applications" style="display: none;">
+      <div class="data-table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Applicant</th>
+              <th>Applied Role & Company</th>
+              <th>Current Stage</th>
+              <th>Submission Date</th>
+              <th style="text-align: right;">Resume</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for app in applications %}
+              <tr>
+                <td>
+                  <strong>{{ app.full_name }}</strong>
+                  <div style="font-size: 0.8rem; color: var(--text-muted);">{{ app.email }}</div>
+                </td>
+                <td>
+                  <a href="{{ url_for('job_detail', job_id=app.job_id) }}" target="_blank" style="font-weight: 600; color: var(--primary);">
+                    {{ app.job_title }}
+                  </a>
+                  <div style="font-size: 0.8rem; color: var(--text-muted);">at {{ app.company_name }}</div>
+                </td>
+                <td>
+                  <span class="status-pill status-{{ app.status }}">
+                    {{ app.status }}
+                  </span>
+                </td>
+                <td>{{ app.applied_at }}</td>
+                <td style="text-align: right;">
+                  <a href="{{ url_for('view_resume', filename=app.resume_filename) }}" target="_blank" class="btn btn-outline btn-sm">
+                    <i data-lucide="file-text" style="width: 13px; height: 13px;"></i>
+                    <span>Resume</span>
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

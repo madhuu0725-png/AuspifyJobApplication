@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile & Resume — JobConnect{% endblock %}
+
+{% block content %}
+<div class="container container-narrow" style="padding-top: 3rem; padding-bottom: 5rem;">
+
+  <div style="margin-bottom: 2rem;">
+    <a href="{{ url_for('seeker_dashboard') }}" style="display: inline-flex; align-items: center; gap: 0.35rem; color: var(--text-muted); font-size: 0.88rem; margin-bottom: 0.75rem;">
+      <i data-lucide="arrow-left" style="width: 15px; height: 15px;"></i>
+      <span>Back to Candidate Hub</span>
+    </a>
+    <h1 style="font-family: var(--font-display); font-size: 2.2rem; font-weight: 800;">
+      Candidate Profile & Resume
+    </h1>
+    <p style="color: var(--text-muted); font-size: 1rem;">
+      Keep your details up to date to apply seamlessly to roles with one click.
+    </p>
+  </div>
+
+  <form action="{{ url_for('seeker_profile') }}" method="POST" enctype="multipart/form-data">
+    <!-- Basic Information Card -->
+    <div class="card" style="margin-bottom: 2rem; padding: 2rem;">
+      <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+        <i data-lucide="user" style="width: 20px; height: 20px; color: var(--primary);"></i>
+        <span>Personal Details</span>
+      </h3>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="profileName">Full Name *</label>
+          <input type="text" id="profileName" name="name" class="form-control" value="{{ user.name }}" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="profileTitle">Professional Headline / Title</label>
+          <input type="text" id="profileTitle" name="title" class="form-control" value="{{ user.title or '' }}" placeholder="e.g. Senior Full-Stack Engineer">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="profilePhone">Phone Number</label>
+          <input type="text" id="profilePhone" name="phone" class="form-control" value="{{ user.phone or '' }}" placeholder="+1 (555) 000-0000">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="profileLocation">Location (City, Country)</label>
+          <input type="text" id="profileLocation" name="location" class="form-control" value="{{ user.location or '' }}" placeholder="e.g. San Francisco, CA">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="profileBio">Professional Summary / Bio</label>
+        <textarea id="profileBio" name="bio" class="form-control" rows="4" placeholder="Brief summary of your skills, background, and career focus...">{{ user.bio or '' }}</textarea>
+      </div>
+    </div>
+
+    <!-- Resume Document Card -->
+    <div class="card" style="margin-bottom: 2.5rem; padding: 2rem;">
+      <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+        <i data-lucide="file-text" style="width: 20px; height: 20px; color: var(--primary);"></i>
+        <span>Primary Resume Document</span>
+      </h3>
+
+      {% if user.resume_filename %}
+        <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-surface); padding: 1.25rem 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="width: 44px; height: 44px; border-radius: var(--radius-md); background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center;">
+              <i data-lucide="file-check" style="width: 24px; height: 24px;"></i>
+            </div>
+            <div>
+              <div style="font-weight: 700; font-size: 1rem; color: var(--text-main);">
+                {{ user.resume_original_name or 'Resume.pdf' }}
+              </div>
+              <div style="font-size: 0.8rem; color: var(--text-muted);">
+                Active resume linked to 1-click applications
+              </div>
+            </div>
+          </div>
+
+          <a href="{{ url_for('view_resume', filename=user.resume_filename) }}" target="_blank" class="btn btn-secondary btn-sm">
+            <i data-lucide="external-link" style="width: 14px; height: 14px;"></i>
+            <span>Preview Resume</span>
+          </a>
+        </div>
+      {% endif %}
+
+      <div class="form-group">
+        <label class="form-label">{% if user.resume_filename %}Upload New / Replace Resume File{% else %}Upload Your Resume{% endif %}</label>
+        <input type="file" name="resume_file" class="form-control" accept=".pdf,.doc,.docx">
+        <div class="form-hint">Supported formats: PDF, DOC, DOCX. Max file size: 16 MB.</div>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+      <a href="{{ url_for('seeker_dashboard') }}" class="btn btn-secondary">Cancel</a>
+      <button type="submit" class="btn btn-primary btn-lg">
+        <i data-lucide="save" style="width: 18px; height: 18px;"></i>
+        <span>Save Profile & Resume</span>
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

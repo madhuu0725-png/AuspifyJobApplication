@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Jobs — JobConnect{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2.5rem; padding-bottom: 5rem;">
+
+  <!-- Top Search & Sort Header -->
+  <div style="margin-bottom: 2rem;">
+    <h1 style="font-family: var(--font-display); font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem;">
+      Find Your Next Opportunity
+    </h1>
+    <p style="color: var(--text-muted); font-size: 1.05rem;">
+      Explore {{ total_results }} position{% if total_results != 1 %}s{% endif %} matching your criteria.
+    </p>
+  </div>
+
+  <div class="catalog-layout">
+    <!-- Filter Sidebar Form -->
+    <aside>
+      <form action="{{ url_for('job_listings') }}" method="GET" class="filter-sidebar" id="filterForm">
+        <div class="filter-header">
+          <span class="filter-title">Filters</span>
+          <a href="{{ url_for('job_listings') }}" class="filter-reset">Reset All</a>
+        </div>
+
+        <!-- Keyword Search -->
+        <div class="filter-group">
+          <label class="filter-group-title" for="searchKeyword">Keywords</label>
+          <div class="search-field" style="background: var(--bg-surface); border: 1px solid var(--border-subtle); padding: 0.5rem 0.75rem;">
+            <i data-lucide="search" style="width: 16px; height: 16px;"></i>
+            <input type="text" id="searchKeyword" name="q" value="{{ filters.q }}" placeholder="Title, tech, company...">
+          </div>
+        </div>
+
+        <!-- Location -->
+        <div class="filter-group">
+          <label class="filter-group-title" for="searchLocation">Location</label>
+          <div class="search-field" style="background: var(--bg-surface); border: 1px solid var(--border-subtle); padding: 0.5rem 0.75rem;">
+            <i data-lucide="map-pin" style="width: 16px; height: 16px;"></i>
+            <input type="text" id="searchLocation" name="location" value="{{ filters.location }}" placeholder="City, State...">
+          </div>
+        </div>
+
+        <!-- Remote Only Switch -->
+        <div class="filter-group">
+          <label class="filter-checkbox-label" style="font-weight: 600;">
+            <input type="checkbox" name="remote" value="1" {% if filters.remote == '1' %}checked{% endif %} onchange="document.getElementById('filterForm').submit();">
+            <span>Remote Only Opportunities</span>
+          </label>
+        </div>
+
+        <!-- Category -->
+        <div class="filter-group">
+          <div class="filter-group-title">Category</div>
+          <div class="filter-options">
+            <label class="filter-checkbox-label">
+              <input type="radio" name="category" value="" {% if not filters.category %}checked{% endif %} onchange="document.getElementById('filterForm').submit();">
+              <span>All Categories</span>
+            </label>
+            {% for cat in categories %}
+              <label class="filter-checkbox-label">
+                <input type="radio" name="category" value="{{ cat.id }}" {% if filters.category == cat.id|string %}checked{% endif %} onchange="document.getElementById('filterForm').submit();">
+                <span>{{ cat.name }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Job Type -->
+        <div class="filter-group">
+          <div class="filter-group-title">Job Type</div>
+          <div class="filter-options">
+            <label class="filter-checkbox-label">
+              <input type="radio" name="type" value="" {% if not filters.type %}checked{% endif %} onchange="document.getElementById('filterForm').submit();">
+              <span>Any Type</span>
+            </label>
+            {% for jt in ['Full-time', 'Part-time', 'Remote', 'Contract', 'Internship'] %}
+              <label class="filter-checkbox-label">
+                <input type="radio" name="type" value="{{ jt }}" {% if filters.type == jt %}checked{% endif %} onchange="document.getElementById('filterForm').submit();">
+                <span>{{ jt }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Experience Level -->
+        <div class="filter-group">
+          <div class="filter-group-title">Experience Level</div>
+          <div class="filter-options">
+            <label class="filter-checkbox-label">
+              <input type="radio" name="experience" value="" {% if not filters.experience %}checked{% endif %} onchange="document.getElementById('filterForm').submit();">
+              <span>Any Experience</span>
+            </label>
+            {% for exp in ['Entry Level', 'Mid Level', 'Senior Level', 'Lead / Staff'] %}
+              <label class="filter-checkbox-label">
+                <input type="radio" name="experience" value="{{ exp }}" {% if filters.experience == exp %}checked{% endif %} onchange="document.getElementById('filterForm').submit();">
+                <span>{{ exp }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Min Salary Range -->
+        <div class="filter-group">
+          <div class="filter-group-title">Minimum Annual Salary</div>
+          <select name="min_salary" class="form-control" onchange="document.getElementById('filterForm').submit();">
+            <option value="">Any Salary</option>
+            <option value="60000" {% if filters.min_salary == '60000' %}selected{% endif %}>$60,000+ / yr</option>
+            <option value="100000" {% if filters.min_salary == '100000' %}selected{% endif %}>$100,000+ / yr</option>
+            <option value="140000" {% if filters.min_salary == '140000' %}selected{% endif %}>$140,000+ / yr</option>
+            <option value="180000" {% if filters.min_salary == '180000' %}selected{% endif %}>$180,000+ / yr</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">
+          <i data-lucide="filter" style="width: 16px; height: 16px;"></i>
+          <span>Apply Filters</span>
+        </button>
+      </form>
+    </aside>
+
+    <!-- Main Results Column -->
+    <main>
+      <!-- Results Bar with Sort -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <span style="font-weight: 700; color: var(--text-muted); font-size: 0.95rem;">
+          Showing {{ jobs|length }} active role{% if jobs|length != 1 %}s{% endif %}
+        </span>
+
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <label for="sortSelect" style="font-size: 0.88rem; font-weight: 600; color: var(--text-muted);">Sort By:</label>
+          <select id="sortSelect" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.88rem;" onchange="location.href = updateQueryParam('sort', this.value);">
+            <option value="newest" {% if filters.sort == 'newest' %}selected{% endif %}>Newest First</option>
+            <option value="salary" {% if filters.sort == 'salary' %}selected{% endif %}>Highest Salary</option>
+            <option value="popular" {% if filters.sort == 'popular' %}selected{% endif %}>Most Popular</option>
+          </select>
+        </div>
+      </div>
+
+      {% if jobs %}
+        <div class="jobs-grid">
+          {% for job in jobs %}
+            <div class="job-card {% if job.is_featured %}featured-card{% endif %}">
+              <div>
+                <div class="job-card-header">
+                  <div class="company-snippet">
+                    <div class="company-logo-box">
+                      <i data-lucide="{{ job.logo_icon or 'building' }}" style="width: 24px; height: 24px;"></i>
+                    </div>
+                    <div>
+                      <span class="company-name">{{ job.company_name }}</span>
+                      <h2 class="job-title">
+                        <a href="{{ url_for('job_detail', job_id=job.id) }}">{{ job.title }}</a>
+                      </h2>
+                    </div>
+                  </div>
+
+                  {% if current_user and current_user.role == 'seeker' %}
+                    <button type="button" class="save-btn js-save-job-btn {% if job.id in saved_job_ids %}active{% endif %}" data-job-id="{{ job.id }}" title="Save Job">
+                      <i data-lucide="{% if job.id in saved_job_ids %}bookmark-check{% else %}bookmark{% endif %}" style="width: 17px; height: 17px;"></i>
+                    </button>
+                  {% endif %}
+                </div>
+
+                <div class="job-meta-row">
+                  <span class="job-meta-item">
+                    <i data-lucide="map-pin" style="width: 14px; height: 14px;"></i>
+                    {{ job.location }}
+                  </span>
+                  {% if job.is_remote %}
+                    <span class="badge badge-green">Remote</span>
+                  {% endif %}
+                  <span class="job-meta-item">
+                    <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
+                    {{ job.job_type }}
+                  </span>
+                </div>
+
+                <div class="job-tags">
+                  <span class="badge badge-blue">{{ job.category_name }}</span>
+                  <span class="badge badge-purple">{{ job.experience_level }}</span>
+                </div>
+              </div>
+
+              <div class="job-card-footer">
+                <div>
+                  {% if job.salary_min and job.salary_max %}
+                    <div class="salary-tag">${{ "{:,}".format(job.salary_min) }} - ${{ "{:,}".format(job.salary_max) }}</div>
+                    <div class="salary-period">per year / {{ job.salary_currency }}</div>
+                  {% else %}
+                    <div class="salary-tag">Competitive</div>
+                    <div class="salary-period">DOE</div>
+                  {% endif %}
+                </div>
+
+                <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn btn-secondary btn-sm">
+                  <span>View Details</span>
+                  <i data-lucide="chevron-right" style="width: 14px; height: 14px;"></i>
+                </a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <!-- Empty State -->
+        <div class="card" style="text-align: center; padding: 4rem 2rem;">
+          <div style="width: 64px; height: 64px; border-radius: var(--radius-full); background: #f1f5f9; color: var(--text-muted); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+            <i data-lucide="search-x" style="width: 32px; height: 32px;"></i>
+          </div>
+          <h3 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem;">No matching jobs found</h3>
+          <p style="color: var(--text-muted); max-width: 450px; margin: 0 auto 1.5rem;">
+            We couldn't find any job postings matching your current criteria. Try loosening your filters or clearing search keywords.
+          </p>
+          <a href="{{ url_for('job_listings') }}" class="btn btn-primary">
+            <span>Clear All Filters</span>
+          </a>
+        </div>
+      {% endif %}
+    </main>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function updateQueryParam(key, value) {
+  const url = new URL(window.location.href);
+  url.searchParams.set(key, value);
+  return url.toString();
+}
+</script>
+{% endblock %}

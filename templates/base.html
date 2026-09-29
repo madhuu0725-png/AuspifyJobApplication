@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}JobConnect — Premier Talent & Career Platform{% endblock %}</title>
+  <meta name="description" content="Connecting visionary employers with top-tier engineering, design, and product talent worldwide.">
+
+  <!-- Google Fonts: Plus Jakarta Sans & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- Demo Switcher Banner -->
+  <div class="demo-banner">
+    <div class="demo-banner-left">
+      <span class="badge-pill">Role Switcher</span>
+      <span>Test Any Experience:</span>
+    </div>
+    <div class="demo-roles">
+      <a href="{{ url_for('demo_login', role='seeker') }}" class="demo-btn {% if current_user and current_user.role == 'seeker' %}active{% endif %}">
+        <i data-lucide="user-check" style="width: 14px; height: 14px;"></i>
+        <span>Candidate View (Alex M.)</span>
+      </a>
+      <a href="{{ url_for('demo_login', role='employer') }}" class="demo-btn {% if current_user and current_user.role == 'employer' %}active{% endif %}">
+        <i data-lucide="building" style="width: 14px; height: 14px;"></i>
+        <span>Employer View (Nexus Labs)</span>
+      </a>
+      <a href="{{ url_for('demo_login', role='admin') }}" class="demo-btn {% if current_user and current_user.role == 'admin' %}active{% endif %}">
+        <i data-lucide="shield" style="width: 14px; height: 14px;"></i>
+        <span>Admin View (Director)</span>
+      </a>
+      {% if current_user %}
+        <a href="{{ url_for('logout') }}" class="demo-btn" style="opacity: 0.8;">
+          <i data-lucide="log-out" style="width: 13px; height: 13px;"></i>
+          <span>Logout</span>
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="{{ url_for('index') }}" class="nav-brand">
+        <div class="brand-icon-box">
+          <i data-lucide="briefcase" style="width: 22px; height: 22px;"></i>
+        </div>
+        <span>Job<span class="brand-accent">Connect</span></span>
+      </a>
+
+      <nav>
+        <ul class="nav-links">
+          <li><a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">Home</a></li>
+          <li><a href="{{ url_for('job_listings') }}" class="nav-link {% if request.endpoint == 'job_listings' %}active{% endif %}">Find Jobs</a></li>
+          {% if current_user %}
+            {% if current_user.role == 'seeker' %}
+              <li><a href="{{ url_for('seeker_dashboard') }}" class="nav-link {% if request.endpoint == 'seeker_dashboard' %}active{% endif %}">Candidate Hub</a></li>
+              <li><a href="{{ url_for('seeker_profile') }}" class="nav-link {% if request.endpoint == 'seeker_profile' %}active{% endif %}">My Profile</a></li>
+            {% elif current_user.role == 'employer' %}
+              <li><a href="{{ url_for('employer_dashboard') }}" class="nav-link {% if request.endpoint == 'employer_dashboard' %}active{% endif %}">Employer Hub</a></li>
+              <li><a href="{{ url_for('employer_applications') }}" class="nav-link {% if request.endpoint == 'employer_applications' %}active{% endif %}">Applicants</a></li>
+              <li><a href="{{ url_for('employer_manage_jobs') }}" class="nav-link {% if request.endpoint == 'employer_manage_jobs' %}active{% endif %}">Manage Jobs</a></li>
+            {% elif current_user.role == 'admin' %}
+              <li><a href="{{ url_for('admin_dashboard') }}" class="nav-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">Admin Center</a></li>
+            {% endif %}
+          {% endif %}
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        {% if current_user %}
+          {% if current_user.role == 'employer' %}
+            <a href="{{ url_for('employer_create_job') }}" class="btn btn-primary btn-sm">
+              <i data-lucide="plus-circle" style="width: 16px; height: 16px;"></i>
+              <span>Post a Job</span>
+            </a>
+          {% endif %}
+
+          <div class="nav-user">
+            <div class="user-avatar-sm">
+              {{ current_user.name[:1] }}
+            </div>
+            <div class="user-meta-sm">
+              <span class="user-name-sm">{{ current_user.name.split(' ')[0] }}</span>
+              <span class="user-role-badge">{{ current_user.role }}</span>
+            </div>
+          </div>
+          <a href="{{ url_for('logout') }}" class="btn btn-outline btn-sm" title="Log Out">
+            <i data-lucide="log-out" style="width: 15px; height: 15px;"></i>
+          </a>
+        {% else %}
+          <a href="{{ url_for('login') }}" class="btn btn-outline btn-sm">Sign In</a>
+          <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm">Get Started</a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <!-- Flash Message Container -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="toast-container">
+        {% for category, message in messages %}
+          <div class="alert-toast {{ category }}">
+            <span>{{ message }}</span>
+            <button type="button" class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Main Content Body -->
+  <main style="flex: 1;">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Platform Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">
+            <div class="brand-icon-box" style="width: 32px; height: 32px;">
+              <i data-lucide="briefcase" style="width: 18px; height: 18px;"></i>
+            </div>
+            <span>Job<span class="brand-accent">Connect</span></span>
+          </div>
+          <p style="font-size: 0.9rem; line-height: 1.7; margin-bottom: 1.5rem;">
+            The enterprise career platform bringing exceptional talent and high-growth organizations together with streamlined applications, live status tracking, and recruitment intelligence.
+          </p>
+          <div style="display: flex; gap: 0.75rem;">
+            <span class="badge badge-blue">Verified Employers</span>
+            <span class="badge badge-green">Real-time Status</span>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="footer-links-title">For Candidates</h4>
+          <ul class="footer-links">
+            <li><a href="{{ url_for('job_listings') }}">Browse All Jobs</a></li>
+            <li><a href="{{ url_for('job_listings', remote='1') }}">Remote Opportunities</a></li>
+            <li><a href="{{ url_for('seeker_dashboard') }}">Application Tracker</a></li>
+            <li><a href="{{ url_for('seeker_profile') }}">Candidate Profile & Resume</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-links-title">For Employers</h4>
+          <ul class="footer-links">
+            <li><a href="{{ url_for('employer_create_job') }}">Post an Opening</a></li>
+            <li><a href="{{ url_for('employer_dashboard') }}">Employer Dashboard</a></li>
+            <li><a href="{{ url_for('employer_applications') }}">Candidate Pipeline</a></li>
+            <li><a href="{{ url_for('employer_company_profile') }}">Company Branding</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-links-title">Platform & Admin</h4>
+          <ul class="footer-links">
+            <li><a href="{{ url_for('admin_dashboard') }}">Administration Center</a></li>
+            <li><a href="{{ url_for('demo_login', role='seeker') }}">Demo Candidate</a></li>
+            <li><a href="{{ url_for('demo_login', role='employer') }}">Demo Employer</a></li>
+            <li><a href="{{ url_for('demo_login', role='admin') }}">Demo Administrator</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>&copy; {{ now_year }} JobConnect Platform. Designed for modern recruitment workflows.</span>
+        <span>Built with Python &bull; Flask &bull; SQLite &bull; Vanilla Design System</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>
