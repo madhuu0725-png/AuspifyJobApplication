@@ -89,7 +89,7 @@ A single-click **Demo Role Switcher bar** is available at the very top of every 
 
 1. **Install dependencies** (if not already installed):
    ```bash
-   pip install Flask reportlab requests
+   pip install -r requirements.txt
    ```
 
 2. **Initialize database & demo resumes**:
